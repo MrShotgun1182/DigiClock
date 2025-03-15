@@ -1,6 +1,5 @@
 import tkinter as tk
 from time import strftime
-import os
 import json
 
 WINDOW_WIDTH: int
@@ -29,7 +28,6 @@ def get_base_data():
 
 def set_window(window):
     window: tk.Tk
-    global WINDOW_WIDTH, WINDOW_HEIGHT
     window_screenwidth = window.winfo_screenwidth()
     window_screenheight = window.winfo_screenheight()
     window_x = int((window_screenwidth/2)-(WINDOW_WIDTH/2))
