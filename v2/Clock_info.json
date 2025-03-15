@@ -11,7 +11,7 @@
     },
     "Clock_info":
     {
-        "x": 0,
+        "x": 20,
         "y": 200,
         "clock_color": "#ADB2D4",
         "number_spacing": 10
