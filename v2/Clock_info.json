@@ -8,6 +8,11 @@
     {
         "background_color": "#1F7D53"
     },
+    "Clock_place":
+    {
+        "x": 0,
+        "y": 50
+    },
     "number":
     {
         "0":[
