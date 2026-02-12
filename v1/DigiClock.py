@@ -1,12 +1,14 @@
-from colorama import Fore
+from colorama import Fore, init, Style
 from random import randint
 from time import strftime, sleep
-from os import system
+import sys
+import os
+
+# مقداردهی اولیه برای پشتیبانی از کدهای ANSI در ویندوز
+init(autoreset=True)
 
 ALL_CHAR = '!@#$%^&*()+=}{/?<>QWERTYUIOP{}LKJHGFDSAZXCVBNM'
 OUT = [[],[],[],[],[]]
-BACKGROUND_COLOR = 'GREEN'
-NUMBERS_COLOR = 'LIGHTMAGENTA'
 
 line_true_false = {
     'empty': [(1,0,0,0), (1,0,0,0), (1,0,0,0), (1,0,0,0), (1,0,0,0)],
@@ -23,90 +25,79 @@ line_true_false = {
     '9': [(0,0,0,6), (0,2,2,2), (0,0,0,6), (0,0,4,2), (0,0,0,6)]
 }
 
-def sprint(text = '\n', color = "WHITE"):
-    color = color.upper()
-    if color == "RED":
-        Color = Fore.RED
-    elif color == "GREEN":
-        Color = Fore.GREEN
-    elif color == "BLUE":
-        Color = Fore.BLUE
-    elif color == "CYAN":
-        Color = Fore.CYAN
-    elif color == "LIGHTMAGENTA":
-        Color = Fore.LIGHTMAGENTA_EX
-    elif color == "LIGHTYELLOW":
-        Color = Fore.LIGHTYELLOW_EX
-    elif color == "LIGHTBLUE":
-        Color = Fore.LIGHTBLUE_EX
-    else:
-        Color = Fore.WHITE
-    print(Color, text, sep='', end='')
-    
-def number (number):
+COLOR_MAP = {
+    1: Fore.RED, 2: Fore.GREEN, 3: Fore.BLUE, 
+    4: Fore.CYAN, 5: Fore.LIGHTMAGENTA_EX, 
+    6: Fore.LIGHTYELLOW_EX, 7: Fore.LIGHTBLUE_EX
+}
+
+def get_color_code(number):
+    return COLOR_MAP.get(number, Fore.WHITE)
+
+def add_number_to_out(num_char):
     counter = 0
-    for line in line_true_false[number]:
-            for _ in range(line[0]):
-                OUT[counter].append(False)
-            for _ in range(line[1]):
-                OUT[counter].append(True)
-            for _ in range(line[2]):
-                OUT[counter].append(False)
-            for _ in range(line[3]):
-                OUT[counter].append(True)
-            counter += 1
+    if num_char not in line_true_false: return
+    for line in line_true_false[num_char]:
+        for _ in range(line[0]): OUT[counter].append(False)
+        for _ in range(line[1]): OUT[counter].append(True)
+        for _ in range(line[2]): OUT[counter].append(False)
+        for _ in range(line[3]): OUT[counter].append(True)
+        counter += 1
 
-def print_OUT ():
+def build_frame(bg_color, num_color):
+    # کد \033[H مکان‌نما را به سطر اول و ستون اول می‌برد
+    buffer = "\033[H" 
     for i in range(5):
-        for j in OUT[i]:
-            if j == False:
-                sprint(ALL_CHAR[randint(0,45)], BACKGROUND_COLOR)
-            else:
-                sprint(ALL_CHAR[randint(0,45)], NUMBERS_COLOR)
-        print()
+        line_content = ""
+        for is_num in OUT[i]:
+            char = ALL_CHAR[randint(0, len(ALL_CHAR)-1)]
+            color = num_color if is_num else bg_color
+            line_content += f"{color}{char}"
+        # کد \033[K محتویات باقی‌مانده از خط قبلی را پاک می‌کند تا بهم‌ریختگی ایجاد نشود
+        buffer += line_content + "\033[K\n"
+    return buffer
 
-def print_color():
-    print('1) RED')
-    print('2) GREEN')
-    print('3) BLUE')
-    print('4) CYAN')
-    print('5) LIGHTMAGENTA')
-    print('6) LIGHTYELLOW')
-    print('7) LIGHTBLUE')
-
-def set_color(number):
-    if number == 1:
-        return 'RED'
-    elif number == 2:
-        return 'GREEN'
-    elif number == 3:
-        return 'BLUE'
-    elif number == 4:
-        return 'CYAN'
-    elif number == 5:
-        return 'LIGHTMAGENTA'
-    elif number == 6:
-        return 'LIGHTYELLOW'
-    else:
-        return 'LIGHTBLUE'
-    
 if __name__ == '__main__':
-    print_color()
-    BACKGROUND_COLOR = set_color(int(input('Choose a background color: ')))
-    NUMBERS_COLOR = set_color(int(input('Choose a numbers color: ')))
+    # پاک کردن اولیه صفحه
+    os.system('cls' if os.name == 'nt' else 'clear')
     
-    while(True):
-        time = strftime("%H:%M:%S")
+    print('--- Color Options ---')
+    print('1) RED  2) GREEN  3) BLUE  4) CYAN\n5) MAGENTA  6) YELLOW  7) LIGHTBLUE')
+    
+    try:
+        bg_choice = int(input('\nChoose background color (1-7): '))
+        nm_choice = int(input('Choose numbers color (1-7): '))
+        
+        bg_color = get_color_code(bg_choice)
+        nm_color = get_color_code(nm_choice)
 
-        for one_number in time:
-            if one_number == ':':
-                number('empty')
-                number(one_number)
-                number('empty')
-            else:
-                number(one_number)
-                number('empty')
-        print_OUT()
-        OUT = [[],[],[],[],[]]
-        sleep(1)
-        system('cls')
+        # مخفی کردن مکان‌نما برای زیبایی بیشتر (در برخی ترمینال‌ها کار می‌کند)
+        sys.stdout.write("\033[?25l")
+        sys.stdout.flush()
+
+        while True:
+            current_time = strftime("%H:%M:%S")
+            OUT = [[],[],[],[],[]]
+            
+            for char in current_time:
+                if char == ':':
+                    add_number_to_out('empty')
+                    add_number_to_out(char)
+                    add_number_to_out('empty')
+                else:
+                    add_number_to_out(char)
+                    add_number_to_out('empty')
+            
+            # چاپ فریم نهایی
+            sys.stdout.write(build_frame(bg_color, nm_color))
+            sys.stdout.flush()
+            
+            sleep(1)
+            
+    except KeyboardInterrupt:
+        # نشان دادن دوباره مکان‌نما موقع خروج
+        sys.stdout.write("\033[?25h" + Style.RESET_ALL)
+        print("\nStopped by user.")
+    except Exception as e:
+        sys.stdout.write("\033[?25h" + Style.RESET_ALL)
+        print(f"\nAn error occurred: {e}")
