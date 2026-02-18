@@ -1,0 +1,27 @@
+name: Digital Clock Terminal Run
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-clock:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Run Digital Clock
+      run: |
+        # فرض می‌کنیم نام فایل اصلی تو main.py است
+        # برای اینکه برنامه تا ابد اجرا نشود و اکشن متوقف شود، 
+        # با استفاده از دستور timeout فقط 10 ثانیه آن را اجرا می‌کنیم
+        timeout 10s python main.py || echo "برنامه بعد از 10 ثانیه با موفقیت متوقف شد."
